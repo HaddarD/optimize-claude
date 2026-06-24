@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Token & Benchmark Comparison</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  h1 { text-align: center; font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { text-align: center; font-size: 0.68rem; color: #94a3b8; margin-bottom: 14px; }
+  .subtitle span { color: #facc15; }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex; gap: 6px; justify-content: center; margin-bottom: 16px;
+  }
+  .tab-btn {
+    background: #1e2130; color: #94a3b8; border: none;
+    border-radius: 8px; padding: 8px 18px; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .tab-btn.active { background: #3b82f6; color: #fff; }
+
+  /* Controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .control-group {
+    display: flex; align-items: center; gap: 6px;
+    background: #1e2130; border-radius: 10px; padding: 7px 12px; flex-wrap: wrap;
+  }
+  .control-label { font-size: 0.72rem; color: #94a3b8; }
+  button {
+    border: none; border-radius: 6px; padding: 5px 10px;
+    font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; background: #334155; color: #94a3b8;
+  }
+  button.active-off  { background: #16a34a; color: #fff; }
+  button.active-on   { background: #dc2626; color: #fff; }
+  button.active-all  { background: #475569; color: #fff; }
+  .m-s  { --ac: #1d4ed8; } .m-o46 { --ac: #7e22ce; }
+  .m-o47 { --ac: #c2410c; } .m-o48 { --ac: #991b1b; }
+  button.active-model { background: var(--ac); color: #fff; }
+
+  /* Section */
+  .section { display: none; }
+  .section.visible { display: block; }
+
+  /* Model cards - tokens */
+  .model-card { border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid #1e293b; }
+  .model-header { padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 3px; }
+  .model-name { font-weight: 700; font-size: 0.9rem; }
+  .model-note { font-size: 0.62rem; opacity: 0.8; }
+  .model-body { padding: 12px 14px; }
+  .effort-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .effort-label { width: 50px; text-align: right; font-size: 0.72rem; font-weight: 600; flex-shrink: 0; }
+  .effort-label.na { color: #334155; }
+  .bar-track { flex: 1; height: 26px; background: #1e293b; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; transition: width 0.5s ease; min-width: 2px; }
+  .bar-fill span { font-size: 0.68rem; font-weight: 700; color: #fff; padding: 0 7px; white-space: nowrap; }
+  .na-text { height: 26px; display: flex; align-items: center; padding: 0 8px; font-size: 0.68rem; color: #334155; }
+  .mult { width: 40px; text-align: right; font-size: 0.62rem; color: #64748b; flex-shrink: 0; }
+  .card-s   .model-header { background: #1e3a8a; } .card-s   { background: #0f1e3d; }
+  .card-o46 .model-header { background: #581c87; } .card-o46 { background: #1a0a2e; }
+  .card-o47 .model-header { background: #9a3412; } .card-o47 { background: #2d1008; }
+  .card-o48 .model-header { background: #7f1d1d; } .card-o48 { background: #200808; }
+  .bg-green { background: #16a34a; } .bg-yellow { background: #ca8a04; }
+  .bg-orange { background: #ea580c; } .bg-red { background: #dc2626; }
+  .bg-darkred { background: #7f1d1d; }
+
+  /* Benchmark section */
+  .bench-controls { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; }
+  .bench-btn { background: #1e2130; color: #94a3b8; border: none; border-radius: 8px; padding: 6px 14px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .bench-btn.active { background: #0891b2; color: #fff; }
+
+  .bench-card { background: #111827; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 10px; overflow: hidden; }
+  .bench-header { padding: 10px 14px; font-weight: 700; font-size: 0.85rem; }
+  .bench-body { padding: 0 14px 12px; }
+  .bench-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .bench-model { width: 76px; font-size: 0.7rem; font-weight: 600; flex-shrink: 0; color: #cbd5e1; }
+  .score-bar-track { flex: 1; height: 24px; background: #1e293b; border-radius: 6px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; transition: width 0.4s ease; }
+  .score-bar-fill span { font-size: 0.68rem; font-weight: 700; color: #fff; padding: 0 7px; white-space: nowrap; }
+  .score-label { width: 36px; text-align: right; font-size: 0.68rem; color: #94a3b8; flex-shrink: 0; }
+  .bench-note { font-size: 0.62rem; color: #64748b; margin-top: 6px; padding-top: 6px; border-top: 1px solid #1f2937; }
+  .score-s   { background: #1d4ed8; } .score-o46 { background: #7e22ce; }
+  .score-o47 { background: #c2410c; } .score-o48 { background: #991b1b; }
+
+  /* Decision guide */
+  .decision-card { background: #111827; border-radius: 12px; border: 1px solid #1e293b; padding: 14px 16px; margin-bottom: 10px; }
+  .decision-card h3 { font-size: 0.8rem; font-weight: 700; margin-bottom: 10px; }
+  .decision-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; font-size: 0.72rem; line-height: 1.5; }
+  .decision-tag {
+    flex-shrink: 0; padding: 2px 8px; border-radius: 4px;
+    font-size: 0.62rem; font-weight: 700; white-space: nowrap; margin-top: 1px;
+  }
+  .tag-green  { background: #14532d; color: #4ade80; }
+  .tag-yellow { background: #713f12; color: #fbbf24; }
+  .tag-orange { background: #7c2d12; color: #fb923c; }
+  .tag-red    { background: #450a0a; color: #f87171; }
+  .decision-text { color: #cbd5e1; }
+  .decision-rec  { color: #94a3b8; font-size: 0.68rem; }
+
+  /* Insights */
+  .insights { background: #111827; border-radius: 12px; padding: 12px 14px; margin-top: 14px; border: 1px solid #1e293b; }
+  .insights h2 { font-size: 0.78rem; font-weight: 700; margin-bottom: 8px; }
+  .insight-item { display: flex; gap: 7px; margin-bottom: 5px; font-size: 0.7rem; color: #cbd5e1; line-height: 1.4; }
+  .dg  { color: #4ade80; font-weight: 700; flex-shrink: 0; }
+  .dy  { color: #facc15; font-weight: 700; flex-shrink: 0; }
+  .dor { color: #fb923c; font-weight: 700; flex-shrink: 0; }
+  .dr  { color: #f87171; font-weight: 700; flex-shrink: 0; }
+  .db  { color: #60a5fa; font-weight: 700; flex-shrink: 0; }
+  .dp  { color: #c084fc; font-weight: 700; flex-shrink: 0; }
+  .warn { font-size: 0.63rem; color: #4b5563; margin-top: 7px; padding-top: 7px; border-top: 1px solid #1f2937; }
+
+  /* Ladder */
+  .ladder { background: #111827; border-radius: 12px; padding: 12px 14px; margin-top: 10px; border: 1px solid #1e293b; }
+  .ladder h2 { font-size: 0.78rem; font-weight: 700; margin-bottom: 8px; }
+  .ladder-step { display: flex; gap: 8px; margin-bottom: 7px; font-size: 0.7rem; line-height: 1.4; }
+  .step-num { font-weight: 700; flex-shrink: 0; width: 12px; }
+  .step-task { color: #f1f5f9; }
+  .step-rec  { color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<h1>Claude Model Comparison</h1>
+<p class="subtitle">Tokens · Benchmarks · Decision Guide &nbsp;|&nbsp; <span>Token numbers are estimates — no official multipliers published</span></p>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('tokens')">💰 Token Cost</button>
+  <button class="tab-btn" onclick="showTab('bench')">📊 Benchmarks</button>
+  <button class="tab-btn" onclick="showTab('decide')">🎯 Decision Guide</button>
+</div>
+
+<!-- ══════════════════════════════════════════ TOKEN SECTION -->
+<div id="sec-tokens" class="section visible">
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Thinking</span>
+      <button id="btn-off" class="active-off" onclick="setThinking(false)">OFF</button>
+      <button id="btn-on"  onclick="setThinking(true)">ON</button>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Show</span>
+      <button id="btn-all" class="active-all" onclick="setModel('all')">All</button>
+      <button id="btn-s"   class="m-s"   onclick="setModel('s')">Sonnet 4.6</button>
+      <button id="btn-o46" class="m-o46" onclick="setModel('o46')">Opus 4.6</button>
+      <button id="btn-o47" class="m-o47" onclick="setModel('o47')">Opus 4.7</button>
+      <button id="btn-o48" class="m-o48" onclick="setModel('o48')">Opus 4.8</button>
+    </div>
+  </div>
+
+  <div id="token-cards"></div>
+
+  <div class="insights">
+    <h2>Key takeaways</h2>
+    <div class="insight-item"><span class="dg">▸</span><span>Thinking OFF + Low = minimum tokens. Best for planning &amp; conversation.</span></div>
+    <div class="insight-item"><span class="dy">▸</span><span>Thinking ON at High is roughly 5× the cost of thinking OFF at Low.</span></div>
+    <div class="insight-item"><span class="dor">▸</span><span>Opus 4.6 costs ~67% more than Sonnet 4.6 at the same effort level.</span></div>
+    <div class="insight-item"><span class="dr">▸</span><span>Opus 4.7/4.8 cost ~2× Sonnet due to Opus premium + new tokenizer (up to 35% inflation).</span></div>
+    <div class="insight-item"><span class="db">▸</span><span>xHigh exists only on Opus 4.7 and 4.8 — not on Sonnet 4.6 or Opus 4.6.</span></div>
+    <div class="insight-item"><span class="dp">▸</span><span>Toggle Thinking ON/OFF to see how dramatically it shifts the numbers.</span></div>
+    <p class="warn">⚠ All token numbers are estimates. Anthropic publishes no official effort-level multipliers.</p>
+  </div>
+
+  <div class="ladder">
+    <h2>Escalation ladder</h2>
+    <div class="ladder-step"><span class="step-num" style="color:#4ade80">1</span><div><div class="step-task">Planning / conversation</div><div class="step-rec">Sonnet 4.6 · Low · Thinking OFF</div></div></div>
+    <div class="ladder-step"><span class="step-num" style="color:#facc15">2</span><div><div class="step-task">General coding</div><div class="step-rec">Sonnet 4.6 · Medium · Thinking ON</div></div></div>
+    <div class="ladder-step"><span class="step-num" style="color:#fb923c">3</span><div><div class="step-task">Complex coding / debugging</div><div class="step-rec">Sonnet 4.6 · High · Thinking ON</div></div></div>
+    <div class="ladder-step"><span class="step-num" style="color:#f87171">4</span><div><div class="step-task">Sonnet keeps failing</div><div class="step-rec">Opus 4.6 · Medium or High · Thinking ON</div></div></div>
+    <div class="ladder-step"><span class="step-num" style="color:#6b7280">5</span><div><div class="step-task">Opus 4.7 / 4.8</div><div class="step-rec">Only if truly necessary — tokenizer penalty hurts context budget</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ BENCHMARK SECTION -->
+<div id="sec-bench" class="section">
+
+  <div class="bench-controls">
+    <button class="bench-btn active" onclick="setBench('coding')">💻 Coding (SWE)</button>
+    <button class="bench-btn" onclick="setBench('hard-coding')">🔥 Hard Coding (Pro)</button>
+    <button class="bench-btn" onclick="setBench('science')">🔬 Science / PhD</button>
+    <button class="bench-btn" onclick="setBench('computer')">🖥 Computer Use</button>
+    <button class="bench-btn" onclick="setBench('terminal')">⌨️ Terminal</button>
+    <button class="bench-btn" onclick="setBench('creative')">✍️ Creative & Emotional</button>
+  </div>
+
+  <div id="bench-cards"></div>
+
+  <div class="insights" style="margin-top:0">
+    <h2>What the benchmarks mean for you</h2>
+    <div class="insight-item"><span class="dg">▸</span><span><b>Coding (SWE-bench Verified):</b> Everyday GitHub issues. Sonnet 4.6 (79.6%) vs Opus 4.6 (80.8%) — practically identical. Sonnet wins on cost.</span></div>
+    <div class="insight-item"><span class="dy">▸</span><span><b>Hard Coding (SWE-bench Pro):</b> Multi-file, complex problems. Gap widens — Sonnet (~53%) vs Opus 4.8 (69.2%). Worth escalating here.</span></div>
+    <div class="insight-item"><span class="dor">▸</span><span><b>Science / PhD (GPQA Diamond):</b> Expert-level reasoning. Massive gap — Sonnet (74.1%) vs Opus 4.6 (91.3%). Use Opus for deep research.</span></div>
+    <div class="insight-item"><span class="db">▸</span><span><b>Computer Use &amp; Terminal:</b> All models are close enough that Sonnet remains the practical choice.</span></div>
+    <div class="insight-item"><span class="dp">▸</span><span><b>Benchmarks run at max effort, 5 attempts avg.</b> Real-world results at default High effort will be somewhat lower across all models. The relative gaps between models stay roughly the same though.</span></div>
+    <div class="insight-item"><span class="dg">▸</span><span><b>Creative / Emotional Writing:</b> No formal % score exists. Chatbot Arena ELO (human preference) is the best proxy. Opus 4.6 leads Sonnet by ~65 ELO. For companionship chats: Sonnet is excellent. For memoir, book chapters, deep interviews: Opus 4.6 is worth it — and has double the output length (128K vs 64K).</span></div>
+    <p class="warn">⚠ Benchmarks are published by Anthropic at max/xhigh effort with multiple attempts. Independent trackers sometimes show different numbers due to different harnesses.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ DECISION SECTION -->
+<div id="sec-decide" class="section">
+  <div class="decision-card">
+    <h3>What kind of problem are you stuck on?</h3>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-green">COMPANION</span>
+      <div>
+        <div class="decision-text">Packing support, emotional processing, casual conversation</div>
+        <div class="decision-rec">→ Sonnet 4.6 · Low · Thinking OFF</div>
+        <div class="decision-rec">Sonnet is warm and excellent here. The Opus gap doesn't matter for this. Save your tokens.</div>
+        <div class="decision-rec" style="color:#4ade80;margin-top:3px">⚡ Thinking OFF is better here — natural flow beats calculated responses.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-yellow">MEMOIR / BOOK</span>
+      <div>
+        <div class="decision-text">Life story writing, long chapters, emotional narrative, style consistency</div>
+        <div class="decision-rec">→ Opus 4.6 · Medium · Thinking OFF (default)</div>
+        <div class="decision-rec">Opus leads Chatbot Arena by 65 ELO points in writing quality. 128K output vs Sonnet's 64K — longer chapters in one pass.</div>
+        <div class="decision-rec" style="color:#facc15;margin-top:3px">⚡ Try Thinking OFF first — writing flows more naturally. Switch Thinking ON only for structuring complex sections (weaving timelines, organizing themes). Then back OFF for the actual writing.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-yellow">INTERVIEW</span>
+      <div>
+        <div class="decision-text">Deep emotional interview-style conversation, memoir drafting, GoFundMe storytelling</div>
+        <div class="decision-rec">→ Opus 4.6 · Medium · Thinking OFF</div>
+        <div class="decision-rec">Multi-turn emotional depth and thematic consistency — Opus holds the thread better across a long session.</div>
+        <div class="decision-rec" style="color:#facc15;margin-top:3px">⚡ Thinking OFF. You want presence and responsiveness, not deliberation before every answer. The Opus quality edge comes from the model itself, not the thinking budget.</div>
+      </div>
+    </div>
+
+
+      <div>
+        <div class="decision-text">Simple error, missing semicolon, obvious logic issue</div>
+        <div class="decision-rec">→ Sonnet 4.6 · Low or Medium · Thinking optional</div>
+        <div class="decision-rec">Sonnet solves ~80% of everyday coding issues. Don't escalate.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-yellow">STUCK LOOP</span>
+      <div>
+        <div class="decision-text">Keeps trying the same wrong approach, circular fixes</div>
+        <div class="decision-rec">→ Sonnet 4.6 · High · Thinking ON</div>
+        <div class="decision-rec">More thinking budget often breaks the loop. Try this before Opus.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-yellow">MULTI-FILE</span>
+      <div>
+        <div class="decision-text">Problem spans several files, needs to track dependencies</div>
+        <div class="decision-rec">→ Sonnet 4.6 · High · Thinking ON &nbsp; OR &nbsp; Opus 4.6 · Medium · Thinking ON</div>
+        <div class="decision-rec">SWE-bench Pro gap: Sonnet ~53% vs Opus 4.8 69%. Meaningful jump here.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-orange">ARCHITECTURE</span>
+      <div>
+        <div class="decision-text">System design, deep refactor, complex patterns across codebase</div>
+        <div class="decision-rec">→ Opus 4.6 · High · Thinking ON</div>
+        <div class="decision-rec">Worth the token cost. Opus 4.6 handles multi-step reasoning significantly better.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-orange">RESEARCH</span>
+      <div>
+        <div class="decision-text">Deep analysis, expert-level reasoning, PhD-level science</div>
+        <div class="decision-rec">→ Opus 4.6 or 4.8 · High · Thinking ON</div>
+        <div class="decision-rec">GPQA gap is massive: Sonnet 74.1% vs Opus 4.6 91.3%. Don't skimp here.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag tag-red">FRONTIER</span>
+      <div>
+        <div class="decision-text">Genuinely unsolvable by Opus 4.6, needs absolute best</div>
+        <div class="decision-rec">→ Opus 4.8 · xHigh or Max · Thinking ON</div>
+        <div class="decision-rec">Expect ~2× token cost vs Sonnet + tokenizer penalty. Reserve for real dead-ends.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-card">
+    <h3>Is it worth the big jump vs. grinding up the ladder?</h3>
+    <div style="font-size:0.72rem; color:#cbd5e1; line-height:1.6;">
+      <p style="margin-bottom:8px"><b style="color:#4ade80">Jump straight to Opus 4.6+ when:</b></p>
+      <p style="margin-bottom:4px; color:#94a3b8">• The problem clearly spans multiple files / deep reasoning</p>
+      <p style="margin-bottom:4px; color:#94a3b8">• Sonnet already failed 2–3 times at Medium or High</p>
+      <p style="margin-bottom:4px; color:#94a3b8">• It's a research/science task (GPQA gap is 17 points)</p>
+      <p style="margin-bottom:12px; color:#94a3b8">• You're already compressed and need to solve fast</p>
+
+      <p style="margin-bottom:8px"><b style="color:#facc15">Grind the ladder when:</b></p>
+      <p style="margin-bottom:4px; color:#94a3b8">• It's likely a simple bug or logic error (Sonnet handles ~80%)</p>
+      <p style="margin-bottom:4px; color:#94a3b8">• You haven't tried Thinking ON yet at the current model</p>
+      <p style="margin-bottom:4px; color:#94a3b8">• Context is mostly fresh — you have room to try a few times</p>
+      <p style="margin-bottom:0; color:#94a3b8">• The SWE-bench gap for your task type is small</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Token data ───────────────────────────────────────────────────────────────
+const BASE = 1000;
+const MODELS = [
+  { id:"s",   name:"Sonnet 4.6", note:"Base model · No xHigh · Original tokenizer", card:"card-s",   mult:1.0,  efforts:["low","medium","high","max"] },
+  { id:"o46", name:"Opus 4.6",   note:"67% more per token · No xHigh · Original tokenizer", card:"card-o46", mult:1.67, efforts:["low","medium","high","max"] },
+  { id:"o47", name:"Opus 4.7",   note:"67% more + ~27% tokenizer inflation · Has xHigh", card:"card-o47", mult:2.12, efforts:["low","medium","high","xhigh","max"] },
+  { id:"o48", name:"Opus 4.8",   note:"Same tokenizer as 4.7 · More efficient on complex tasks", card:"card-o48", mult:2.12, efforts:["low","medium","high","xhigh","max"] }
+];
+const ALL_E = ["low","medium","high","xhigh","max"];
+const E_LABELS = { low:"Low", medium:"Medium", high:"High", xhigh:"xHigh", max:"Max" };
+const M_OFF = { low:1.0, medium:1.5, high:2.0, xhigh:null, max:3.0 };
+const M_ON  = { low:1.3, medium:2.5, high:5.0, xhigh:7.0,  max:10.0 };
+
+let thinkOn = false, activeModel = "all";
+
+function getT(mMult, effort) {
+  const em = (thinkOn ? M_ON : M_OFF)[effort];
+  return em === null ? null : Math.round(BASE * mMult * em);
+}
+function allVals() {
+  return MODELS.flatMap(m => m.efforts.map(e => getT(m.mult, e))).filter(Boolean);
+}
+function barCol(v, max) {
+  const p = v/max;
+  return p < 0.2 ? "bg-green" : p < 0.4 ? "bg-yellow" : p < 0.6 ? "bg-orange" : p < 0.8 ? "bg-red" : "bg-darkred";
+}
+function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+"k" : n.toString(); }
+
+function renderTokens() {
+  const max = Math.max(...allVals());
+  const vis = activeModel === "all" ? MODELS : MODELS.filter(m => m.id === activeModel);
+  document.getElementById("token-cards").innerHTML = vis.map(m => `
+    <div class="model-card ${m.card}">
+      <div class="model-header"><span class="model-name">${m.name}</span><span class="model-note">${m.note}</span></div>
+      <div class="model-body">
+        ${ALL_E.map(e => {
+          const sup = m.efforts.includes(e);
+          const t   = sup ? getT(m.mult, e) : null;
+          const lc  = sup ? "effort-label" : "effort-label na";
+          const pct = t ? Math.min(100,(t/max)*100) : 0;
+          return `<div class="effort-row">
+            <span class="${lc}">${E_LABELS[e]}</span>
+            <div class="bar-track">${sup && t
+              ? `<div class="bar-fill ${barCol(t,max)}" style="width:${pct}%"><span>~${fmt(t)}</span></div>`
+              : `<div class="na-text">Not available on this model</div>`}
+            </div>
+            <span class="mult">${t ? "×"+(t/BASE).toFixed(1) : ""}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+
+function setThinking(on) {
+  thinkOn = on;
+  document.getElementById("btn-off").className = on ? "" : "active-off";
+  document.getElementById("btn-on").className  = on ? "active-on" : "";
+  renderTokens();
+}
+function setModel(id) {
+  activeModel = id;
+  ["all","s","o46","o47","o48"].forEach(m => {
+    const b = document.getElementById("btn-"+m);
+    if (m === "all") b.className = id==="all" ? "active-all" : "";
+    else { b.className = "m-"+m + (id===m ? " active-model" : ""); }
+  });
+  renderTokens();
+}
+
+// ─── Benchmark data ───────────────────────────────────────────────────────────
+const BENCH_DATA = {
+  coding: {
+    title: "💻 Everyday Coding — SWE-bench Verified",
+    desc:  "500 real GitHub issues resolved end-to-end. Standard coding benchmark.",
+    scores: [
+      { model:"Sonnet 4.6", score:79.6, cls:"score-s"   },
+      { model:"Opus 4.6",   score:80.8, cls:"score-o46" },
+      { model:"Opus 4.7",   score:87.6, cls:"score-o47" },
+      { model:"Opus 4.8",   score:88.6, cls:"score-o48" }
+    ],
+    note: "Sonnet 4.6 vs Opus 4.6 gap = 1.2 points. Practically identical for everyday coding. Escalate to Opus 4.7/4.8 only for genuinely hard problems.",
+    max: 100
+  },
+  "hard-coding": {
+    title: "🔥 Hard Coding — SWE-bench Pro",
+    desc:  "Harder, multi-language variant. Less benchmark saturation. More representative of real complex problems.",
+    scores: [
+      { model:"Sonnet 4.6", score:53.0, cls:"score-s",   note:"~" },
+      { model:"Opus 4.6",   score:55.4, cls:"score-o46" },
+      { model:"Opus 4.7",   score:64.3, cls:"score-o47" },
+      { model:"Opus 4.8",   score:69.2, cls:"score-o48" }
+    ],
+    note: "Gap widens significantly here. Sonnet (~53%) vs Opus 4.8 (69.2%) = 16 point gap. Worth the token cost for genuinely complex multi-file problems.",
+    max: 100
+  },
+  science: {
+    title: "🔬 Science & PhD Reasoning — GPQA Diamond",
+    desc:  "Expert-level questions in physics, chemistry, biology. Where deep reasoning matters most.",
+    scores: [
+      { model:"Sonnet 4.6", score:74.1, cls:"score-s"   },
+      { model:"Opus 4.6",   score:91.3, cls:"score-o46" },
+      { model:"Opus 4.7",   score:94.2, cls:"score-o47" },
+      { model:"Opus 4.8",   score:93.6, cls:"score-o48" }
+    ],
+    note: "Largest gap: Sonnet (74.1%) vs Opus 4.6 (91.3%) = 17 points. For deep research, architecture analysis, or expert reasoning — always use Opus.",
+    max: 100
+  },
+  computer: {
+    title: "🖥 Computer Use — OSWorld Verified",
+    desc:  "Real GUI tasks on a live Ubuntu VM. Clicking, typing, navigating apps.",
+    scores: [
+      { model:"Sonnet 4.6", score:72.5, cls:"score-s"   },
+      { model:"Opus 4.6",   score:72.7, cls:"score-o46" },
+      { model:"Opus 4.7",   score:78.0, cls:"score-o47" },
+      { model:"Opus 4.8",   score:83.4, cls:"score-o48" }
+    ],
+    note: "Sonnet 4.6 and Opus 4.6 are virtually identical (0.2% gap). Opus 4.7/4.8 improve meaningfully. For most computer use tasks, Sonnet wins on cost.",
+    max: 100
+  },
+  terminal: {
+    title: "⌨️ Terminal — Terminal-Bench",
+    desc:  "Shell scripting, CLI workflows, system administration.",
+    scores: [
+      { model:"Sonnet 4.6", score:59.0, cls:"score-s",   note:"~, TB 2.0" },
+      { model:"Opus 4.6",   score:65.4, cls:"score-o46", note:"TB 2.0"    },
+      { model:"Opus 4.7",   score:69.4, cls:"score-o47", note:"TB 2.0"    },
+      { model:"Opus 4.8",   score:74.6, cls:"score-o48", note:"TB 2.1"    }
+    ],
+    note: "⚠ Terminal-Bench changed from v2.0 to v2.1 between Opus 4.7 and 4.8 — not directly comparable. GPT-5.5 beats Opus 4.8 on TB 2.1 (78.2% vs 74.6%).",
+    max: 100
+  },
+  creative: {
+    title: "✍️ Creative & Emotional Writing — Chatbot Arena ELO",
+    desc:  "Human preference ratings from millions of real blind conversations. Covers writing quality, emotional depth, style, and multi-turn coherence. Higher ELO = more often preferred by real people.",
+    scores: [
+      { model:"Sonnet 4.6", score:76, cls:"score-s",   note:"ELO ~1438" },
+      { model:"Opus 4.6",   score:79, cls:"score-o46", note:"ELO ~1503 · ranked #1 globally" },
+      { model:"Opus 4.7",   score:81, cls:"score-o47", note:"Est. higher — newer model" },
+      { model:"Opus 4.8",   score:83, cls:"score-o48", note:"Est. higher — newest model" }
+    ],
+    note: "⚠ No formal % benchmark for creative/emotional writing. Bars show relative ELO preference (normalized). Opus 4.6 leads Sonnet 4.6 by ~65 ELO points — a meaningful but not massive gap. For companionship chats: Sonnet is excellent. For book writing, memoir, or deep emotional interviews where long-form coherence matters: Opus 4.6 earns its place (also has 128K output vs Sonnet's 64K — lets it write longer chapters in one pass). 💡 Thinking recommendation is DIFFERENT here: Thinking OFF produces more natural, warmer writing. Thinking ON only for structural planning (outlining chapters, organizing timelines) — then back OFF for actual writing.",
+    max: 100
+  }
+};
+
+let activeBench = "coding";
+
+function renderBench() {
+  const d = BENCH_DATA[activeBench];
+  const max = Math.max(...d.scores.map(s => s.score));
+  document.getElementById("bench-cards").innerHTML = `
+    <div class="bench-card">
+      <div class="bench-header">${d.title}</div>
+      <div class="bench-body">
+        <div style="font-size:0.68rem;color:#64748b;margin-bottom:10px">${d.desc}</div>
+        ${d.scores.map(s => {
+          const pct = (s.score / 100) * 100;
+          const note = s.note ? ` <span style="color:#64748b;font-size:0.6rem">(${s.note})</span>` : "";
+          return `<div class="bench-row">
+            <span class="bench-model">${s.model}</span>
+            <div class="score-bar-track">
+              <div class="score-bar-fill ${s.cls}" style="width:${pct}%">
+                <span>${s.score}%${note}</span>
+              </div>
+            </div>
+            <span class="score-label">${s.score}%</span>
+          </div>`;
+        }).join("")}
+        <p class="bench-note">${d.note}</p>
+      </div>
+    </div>`;
+}
+
+function setBench(id) {
+  activeBench = id;
+  document.querySelectorAll(".bench-btn").forEach((b,i) => {
+    b.classList.toggle("active", ["coding","hard-coding","science","computer","terminal","creative"][i] === id);
+  });
+  renderBench();
+}
+
+// ─── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(id) {
+  ["tokens","bench","decide"].forEach(t => {
+    document.getElementById("sec-"+t).classList.toggle("visible", t===id);
+  });
+  document.querySelectorAll(".tab-btn").forEach((b,i) => {
+    b.classList.toggle("active", ["tokens","bench","decide"][i]===id);
+  });
+}
+
+// Init
+renderTokens();
+renderBench();
+</script>
+
+<!-- ══════════════════════════════════════════ PERMANENT REFERENCE SECTION -->
+<div style="margin-top:20px">
+
+  <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <h2 style="font-size:0.85rem;font-weight:700;color:#fff;margin-bottom:12px">📋 Claude Code vs Chat — Context Window Reference</h2>
+    <p style="font-size:0.68rem;color:#64748b;margin-bottom:10px">This table is always visible regardless of which tab is selected above.</p>
+
+    <!-- Table -->
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:0.7rem">
+        <thead>
+          <tr style="background:#1e293b">
+            <th style="padding:8px 10px;text-align:left;color:#94a3b8;font-weight:600;border-radius:6px 0 0 0">Where</th>
+            <th style="padding:8px 10px;text-align:left;color:#94a3b8;font-weight:600">Model</th>
+            <th style="padding:8px 10px;text-align:center;color:#60a5fa;font-weight:600">Pro</th>
+            <th style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:600;border-radius:0 6px 0 0">Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #1e293b">
+            <td style="padding:8px 10px;color:#cbd5e1">claude.ai chat</td>
+            <td style="padding:8px 10px;color:#94a3b8">Opus 4.6 / 4.7 / 4.8 or Sonnet 4.6</td>
+            <td style="padding:8px 10px;text-align:center;color:#4ade80;font-weight:600">500K</td>
+            <td style="padding:8px 10px;text-align:center;color:#4ade80;font-weight:600">500K</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#111827">
+            <td style="padding:8px 10px;color:#cbd5e1">Claude Code (web or terminal)</td>
+            <td style="padding:8px 10px;color:#94a3b8">Opus 4.6 / 4.7 / 4.8</td>
+            <td style="padding:8px 10px;text-align:center;color:#fb923c;font-weight:600">1M ⚠️</td>
+            <td style="padding:8px 10px;text-align:center;color:#4ade80;font-weight:600">1M ✓</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b">
+            <td style="padding:8px 10px;color:#cbd5e1">Claude Code (web or terminal)</td>
+            <td style="padding:8px 10px;color:#94a3b8">Sonnet 4.6</td>
+            <td style="padding:8px 10px;text-align:center;color:#fb923c;font-weight:600">1M ⚠️</td>
+            <td style="padding:8px 10px;text-align:center;color:#fb923c;font-weight:600">1M ⚠️</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.65rem;color:#64748b;margin-top:8px">⚠️ = requires usage credits enabled (pay-as-you-go at API rates on top of your subscription) &nbsp;·&nbsp; ✓ = included in plan, no extra charge</p>
+  </div>
+
+  <!-- What to use when -->
+  <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <h2 style="font-size:0.85rem;font-weight:700;color:#fff;margin-bottom:12px">🗺️ What to Use & When — by Plan</h2>
+
+    <!-- Pro -->
+    <div style="background:#0c1a2e;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:0.8rem;font-weight:700;color:#60a5fa;margin-bottom:8px">On Pro Plan ($20/mo)</div>
+      <div style="font-size:0.7rem;color:#cbd5e1;line-height:1.7">
+        <div style="margin-bottom:4px"><span style="color:#4ade80;font-weight:700">✓ Best for most work:</span> claude.ai chat in Projects · Sonnet 4.6 · Low effort · Thinking OFF</div>
+        <div style="margin-bottom:4px"><span style="color:#facc15;font-weight:700">↑ When Sonnet struggles:</span> Escalate effort/thinking first, then switch to Opus 4.6 in chat</div>
+        <div style="margin-bottom:4px"><span style="color:#fb923c;font-weight:700">⚡ Claude Code on Pro:</span> Same 500K context as chat (without usage credits) · Only worth it if you need local file access, CLAUDE.md persistence, or /compact manual control</div>
+        <div style="margin-bottom:4px"><span style="color:#f87171;font-weight:700">⛔ Avoid:</span> Usage credits — API rates are extremely expensive vs your $20/mo plan · Opus 4.7/4.8 — tokenizer inflation burns context 20-35% faster for no meaningful gain over 4.6</div>
+      </div>
+    </div>
+
+    <!-- Max -->
+    <div style="background:#1a0a2e;border:1px solid #4c1d95;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:0.8rem;font-weight:700;color:#c084fc;margin-bottom:8px">On Max Plan ($100-200/mo)</div>
+      <div style="font-size:0.7rem;color:#cbd5e1;line-height:1.7">
+        <div style="margin-bottom:4px"><span style="color:#4ade80;font-weight:700">✓ Best for most work:</span> claude.ai chat in Projects · Sonnet 4.6 · Low effort · Thinking OFF — same as Pro for everyday tasks</div>
+        <div style="margin-bottom:4px"><span style="color:#4ade80;font-weight:700">✓ Heavy coding advantage:</span> Claude Code with Opus 4.6 · 1M context included · no usage credits needed · lowest token cost of all Opus models</div>
+        <div style="margin-bottom:4px"><span style="color:#facc15;font-weight:700">⚡ Claude Code on Max (Opus 4.6):</span> Best combination — 1M context, lower token burn than 4.7/4.8, deepest reasoning for complex multi-file work</div>
+        <div style="margin-bottom:4px"><span style="color:#fb923c;font-weight:700">⚠️ Sonnet 4.6 in Claude Code:</span> Still needs usage credits for 1M even on Max — falls back to 500K without them</div>
+        <div style="margin-bottom:4px"><span style="color:#f87171;font-weight:700">⛔ Avoid:</span> Opus 4.7/4.8 in Claude Code unless absolutely necessary — 1M included but tokenizer inflation eats it 20-35% faster · Usage credits still not worth it for Sonnet 1M</div>
+      </div>
+    </div>
+
+    <!-- Local vs Web Claude Code -->
+    <div style="background:#0d1f0d;border:1px solid #14532d;border-radius:8px;padding:12px">
+      <div style="font-size:0.8rem;font-weight:700;color:#4ade80;margin-bottom:8px">Claude Code: Local (terminal/PyCharm) vs Web UI</div>
+      <div style="font-size:0.7rem;color:#cbd5e1;line-height:1.7">
+        <div style="margin-bottom:4px"><span style="color:#4ade80;font-weight:700">Web UI Claude Code:</span> Same 1M context benefit on Max · No local file risk · Safer — review code before applying it · Good starting point</div>
+        <div style="margin-bottom:4px"><span style="color:#facc15;font-weight:700">Local Claude Code (terminal/PyCharm):</span> Direct file access, multi-file edits, git integration · Faster workflow when it works · Higher risk — mid-task freeze or wrong edits can break things hard</div>
+        <div style="margin-bottom:4px"><span style="color:#fb923c;font-weight:700">⚠️ Local risk warning:</span> Claude makes mistakes. A freeze mid-task while editing local files can leave your project in a broken state that's difficult to recover from. Always commit to git before starting a Claude Code local session.</div>
+        <div><span style="color:#60a5fa;font-weight:700">Recommendation:</span> Use web UI Claude Code first to get comfortable. Move to local only when you specifically need the file access and have git safety nets in place.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key differences -->
+  <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <h2 style="font-size:0.85rem;font-weight:700;color:#fff;margin-bottom:10px">⚖️ Claude Code vs Chat — Real Differences</h2>
+    <div style="font-size:0.7rem;line-height:1.7">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#111827;border-radius:8px;padding:10px">
+          <div style="color:#60a5fa;font-weight:700;margin-bottom:6px">Claude Code has that Chat doesn't</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> 1M context on Max with Opus (double chat's 500K)</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> /compact — manual compression at strategic moment</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> /clear — restart session, CLAUDE.md survives</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Live context window indicator</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> CLAUDE.md — project rules persist between sessions</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Local file access (terminal/IDE only)</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Switch models mid-session without losing context</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Plan mode — outlines approach before executing</div>
+        </div>
+        <div style="background:#111827;border-radius:8px;padding:10px">
+          <div style="color:#f87171;font-weight:700;margin-bottom:6px">Chat has that Code doesn't</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Organized in Projects with shared knowledge</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Previous chat saved when you start new one</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Safer — you review code before applying it</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> No local file risk</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Familiar interface</div>
+          <div style="color:#94a3b8"><span style="color:#4ade80">✓</span> Same compression behavior — auto-managed</div>
+        </div>
+      </div>
+      <p style="font-size:0.65rem;color:#4b5563;margin-top:8px">Note: /compact in Claude Code and auto-compression in chat are functionally the same — both summarize and continue. The difference is timing and control, not outcome.</p>
+    </div>
+  </div>
+
+  <!-- Usage credits warning -->
+  <div style="background:#1c0a0a;border:1px solid #7f1d1d;border-radius:12px;padding:12px 16px">
+    <h2 style="font-size:0.8rem;font-weight:700;color:#f87171;margin-bottom:8px">⛔ Usage Credits Warning</h2>
+    <div style="font-size:0.7rem;color:#cbd5e1;line-height:1.7">
+      <div style="margin-bottom:4px">Usage credits are <b>pay-as-you-go at standard API rates</b> — they are charged separately on top of your monthly subscription and can cost thousands of dollars compared to your $20-200/mo plan.</div>
+      <div style="margin-bottom:4px">They are NOT required to use Claude Code. They are only required to access the 1M context window on Pro (Opus or Sonnet) and on Max (Sonnet only).</div>
+      <div style="margin-bottom:4px"><b style="color:#facc15">Without usage credits:</b> Claude Code falls back to 500K context and auto-compacts or pauses at the limit — same behavior as chat. You can always /compact or /clear to continue. It does NOT permanently freeze.</div>
+      <div style="color:#fb923c"><b>The billing gate bug:</b> Some Pro users reported Claude Code defaulting to a 1M model and hard-blocking all usage demanding credits — even on fresh sessions with quota available. If this happens: run /model and select a non-[1M] variant, or set CLAUDE_CODE_DISABLE_1M_CONTEXT=1 in your settings.</div>
+    </div>
+  </div>
+
+</div>
+<!-- ══════════════════════════════════════════ HAIKU NOTE -->
+<div style="margin-top:20px;background:#0f0f0f;border:1px solid #1e293b;border-radius:12px;padding:14px 16px">
+  <h2 style="font-size:0.8rem;font-weight:700;color:#6b7280;margin-bottom:10px">📎 Note: Why Claude Haiku 4.5 Is Not In This Calculator</h2>
+
+  <div style="font-size:0.7rem;color:#6b7280;line-height:1.7;space-y:8px">
+
+    <p style="margin-bottom:8px">Haiku 4.5 was deliberately excluded from the comparisons above. Here's what you need to know about it.</p>
+
+    <div style="background:#111;border-left:3px solid #374151;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#4b5563;margin-bottom:5px">Token cost vs context window — the trap</div>
+      <p style="margin-bottom:6px">Haiku is roughly <b style="color:#9ca3af">3x cheaper per token</b> than Sonnet 4.6 — 1,000 Sonnet tokens ≈ 330 Haiku tokens. At Low effort with Thinking OFF, that gives you approximately <b style="color:#9ca3af">606 Haiku turns vs 500 Sonnet turns</b> before first compression. On paper, slightly better.</p>
+      <p style="margin-bottom:6px">But Haiku's context window is <b style="color:#9ca3af">200K tokens across all surfaces</b> — chat, Claude Code, everything — versus Sonnet's <b style="color:#9ca3af">500K in chat and 1M in Claude Code on Max</b>. The token savings and the smaller window roughly cancel each other out at Low effort. The moment you raise effort or turn thinking on, the savings vanish and <b style="color:#ef4444">Haiku fills up significantly faster than Sonnet</b> — not slower. A Haiku session at Medium or High effort will compress sooner than Sonnet at the same settings, despite costing less per token.</p>
+    </div>
+
+    <div style="background:#1a0505;border-left:3px solid #7f1d1d;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#991b1b;margin-bottom:5px">⚠️ Critical: Haiku does not handle complex tasks well — and the gap widens fast</div>
+      <p style="margin-bottom:6px">Haiku 4.5 does not support extended thinking properly for complex tasks. While it technically has a thinking toggle, its reasoning depth degrades significantly on anything hard — the quality gap vs Sonnet isn't just the benchmark numbers, it actively gets worse as tasks become more demanding.</p>
+      <p>Benchmark comparison: SWE-bench Verified — Haiku 73.3% vs Sonnet 79.6% (6.3 point gap). GPQA Diamond (science/reasoning) — Haiku 55.2% vs Sonnet ~74% (nearly 20 point gap). Chatbot Arena ELO for conversation and writing quality: significantly lower. These gaps compound on harder work.</p>
+    </div>
+
+    <div style="background:#0d1117;border-left:3px solid #374151;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#4b5563;margin-bottom:5px">Who Haiku is actually for</div>
+      <p style="margin-bottom:4px"><b style="color:#9ca3af">API developers paying per token at high volume</b> — teams running thousands of calls per day where cost-per-call matters more than reasoning depth. Classification, routing, tagging, boilerplate generation, simple chatbots, speed-critical applications where 80-120 tokens/second response time is the feature.</p>
+      <p>For <b style="color:#9ca3af">monthly subscribers</b> (Pro or Max), Haiku offers no meaningful advantage. You're not billed per token — you have a usage budget. Choosing Haiku to "save tokens" on a subscription doesn't reduce your bill. It just gives you a less capable model with a smaller context window that compresses faster at any real effort level. <b style="color:#ef4444">Not recommended for personal subscription use.</b></p>
+    </div>
+
+    <div style="font-size:0.65rem;color:#374151;padding-top:8px;border-top:1px solid #1e293b">
+      Quick reference: Haiku 4.5 — $1/$5 per million tokens (API) · 200K context (all surfaces) · 73.3% SWE-bench · 55.2% GPQA Diamond · 80-120 tok/sec · No effective extended thinking on complex tasks · Best for: API volume, speed-critical apps · Not for: monthly subscribers, complex reasoning, emotional writing, long-context work
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
