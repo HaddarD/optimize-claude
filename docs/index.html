@@ -45,6 +45,7 @@
   button.active-all  { background: #475569; color: #fff; }
   .m-s  { --ac: #1d4ed8; } .m-o46 { --ac: #7e22ce; }
   .m-o47 { --ac: #c2410c; } .m-o48 { --ac: #991b1b; }
+  .m-f5  { --ac: #b45309; }
   button.active-model { background: var(--ac); color: #fff; }
 
   /* Section */
@@ -69,6 +70,7 @@
   .card-o46 .model-header { background: #581c87; } .card-o46 { background: #1a0a2e; }
   .card-o47 .model-header { background: #9a3412; } .card-o47 { background: #2d1008; }
   .card-o48 .model-header { background: #7f1d1d; } .card-o48 { background: #200808; }
+  .card-f5  .model-header { background: #78350f; } .card-f5  { background: #1c0a00; }
   .bg-green { background: #16a34a; } .bg-yellow { background: #ca8a04; }
   .bg-orange { background: #ea580c; } .bg-red { background: #dc2626; }
   .bg-darkred { background: #7f1d1d; }
@@ -90,6 +92,7 @@
   .bench-note { font-size: 0.62rem; color: #64748b; margin-top: 6px; padding-top: 6px; border-top: 1px solid #1f2937; }
   .score-s   { background: #1d4ed8; } .score-o46 { background: #7e22ce; }
   .score-o47 { background: #c2410c; } .score-o48 { background: #991b1b; }
+  .score-f5  { background: #b45309; }
 
   /* Decision guide */
   .decision-card { background: #111827; border-radius: 12px; border: 1px solid #1e293b; padding: 14px 16px; margin-bottom: 10px; }
@@ -130,12 +133,13 @@
 <body>
 
 <h1>Claude Model Comparison</h1>
-<p class="subtitle">Tokens · Benchmarks · Decision Guide &nbsp;|&nbsp; <span>Token numbers are estimates — no official multipliers published</span></p>
+<p class="subtitle">Tokens · Benchmarks · What Limits You · Decision Guide &nbsp;|&nbsp; <span>Token numbers are estimates — no official multipliers published</span></p>
 
 <!-- Tab bar -->
 <div class="tab-bar">
   <button class="tab-btn active" onclick="showTab('tokens')">💰 Token Cost</button>
   <button class="tab-btn" onclick="showTab('bench')">📊 Benchmarks</button>
+  <button class="tab-btn" onclick="showTab('limits')">❓ What Limits You?</button>
   <button class="tab-btn" onclick="showTab('decide')">🎯 Decision Guide</button>
 </div>
 
@@ -155,6 +159,7 @@
       <button id="btn-o46" class="m-o46" onclick="setModel('o46')">Opus 4.6</button>
       <button id="btn-o47" class="m-o47" onclick="setModel('o47')">Opus 4.7</button>
       <button id="btn-o48" class="m-o48" onclick="setModel('o48')">Opus 4.8</button>
+      <button id="btn-f5"  class="m-f5"  onclick="setModel('f5')">Fable 5 ✦</button>
     </div>
   </div>
 
@@ -166,8 +171,9 @@
     <div class="insight-item"><span class="dy">▸</span><span>Thinking ON at High is roughly 5× the cost of thinking OFF at Low.</span></div>
     <div class="insight-item"><span class="dor">▸</span><span>Opus 4.6 costs ~67% more than Sonnet 4.6 at the same effort level.</span></div>
     <div class="insight-item"><span class="dr">▸</span><span>Opus 4.7/4.8 cost ~2× Sonnet due to Opus premium + new tokenizer (up to 35% inflation).</span></div>
-    <div class="insight-item"><span class="db">▸</span><span>xHigh exists only on Opus 4.7 and 4.8 — not on Sonnet 4.6 or Opus 4.6.</span></div>
+    <div class="insight-item"><span class="db">▸</span><span>xHigh exists only on Opus 4.7, 4.8, and Fable 5 — not on Sonnet 4.6 or Opus 4.6.</span></div>
     <div class="insight-item"><span class="dp">▸</span><span>Toggle Thinking ON/OFF to see how dramatically it shifts the numbers.</span></div>
+    <div class="insight-item"><span style="color:#d97706;font-weight:700;flex-shrink:0">✦</span><span><b>Fable 5:</b> Thinking is ALWAYS ON — no toggle. Shows N/A when Thinking is set to OFF above. Costs ~4.23× Sonnet base per token minimum. Worth it only for frontier-hard tasks where Opus 4.8 keeps failing.</span></div>
     <p class="warn">⚠ All token numbers are estimates. Anthropic publishes no official effort-level multipliers.</p>
   </div>
 
@@ -178,6 +184,7 @@
     <div class="ladder-step"><span class="step-num" style="color:#fb923c">3</span><div><div class="step-task">Complex coding / debugging</div><div class="step-rec">Sonnet 4.6 · High · Thinking ON</div></div></div>
     <div class="ladder-step"><span class="step-num" style="color:#f87171">4</span><div><div class="step-task">Sonnet keeps failing</div><div class="step-rec">Opus 4.6 · Medium or High · Thinking ON</div></div></div>
     <div class="ladder-step"><span class="step-num" style="color:#6b7280">5</span><div><div class="step-task">Opus 4.7 / 4.8</div><div class="step-rec">Only if truly necessary — tokenizer penalty hurts context budget</div></div></div>
+    <div class="ladder-step"><span class="step-num" style="color:#d97706">✦</span><div><div class="step-task">Fable 5 — frontier-hard tasks only</div><div class="step-rec">When Opus 4.8 keeps failing on genuinely complex multi-file / long-horizon work · Thinking always ON · ~4.23× Sonnet token cost · Cheaper per solved task than Opus 4.8 at FrontierCode difficulty · 1M context (chat + Code)</div></div></div>
   </div>
 </div>
 
@@ -205,6 +212,185 @@
     <div class="insight-item"><span class="dg">▸</span><span><b>Creative / Emotional Writing:</b> No formal % score exists. Chatbot Arena ELO (human preference) is the best proxy. Opus 4.6 leads Sonnet by ~65 ELO. For companionship chats: Sonnet is excellent. For memoir, book chapters, deep interviews: Opus 4.6 is worth it — and has double the output length (128K vs 64K).</span></div>
     <p class="warn">⚠ Benchmarks are published by Anthropic at max/xhigh effort with multiple attempts. Independent trackers sometimes show different numbers due to different harnesses.</p>
   </div>
+</div>
+
+<!-- ══════════════════════════════════════════ WHAT LIMITS YOU SECTION -->
+<div id="sec-limits" class="section">
+
+  <h2 style="font-size:0.9rem;font-weight:700;color:#fff;text-align:center;margin-bottom:4px">Context Window vs Usage Limit</h2>
+  <p style="font-size:0.68rem;color:#64748b;text-align:center;margin-bottom:16px">What actually causes compression — and what actually drains your plan budget</p>
+
+  <!-- The key distinction -->
+  <div style="background:#0f1629;border:1px solid #1e3a5f;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <h3 style="font-size:0.8rem;font-weight:700;color:#60a5fa;margin-bottom:10px">🔑 The Two Systems — They Are NOT the Same</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+      <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:8px;padding:10px">
+        <div style="font-size:0.7rem;font-weight:700;color:#60a5fa;margin-bottom:6px">📐 Context Window (Compression)</div>
+        <div style="font-size:0.68rem;color:#94a3b8;line-height:1.6">
+          <div style="margin-bottom:3px"><span style="color:#4ade80">✓</span> Filled by: your messages + my visible responses + system prompts + tool definitions</div>
+          <div style="margin-bottom:3px"><span style="color:#f87171">✗</span> NOT affected by: model choice, effort level, thinking tokens</div>
+          <div style="margin-bottom:3px"><span style="color:#4ade80">✓</span> Thinking blocks are <b>stripped between turns</b> — they don't accumulate</div>
+          <div><span style="color:#4ade80">✓</span> Opus 4.8 on Max compresses at the same speed as Sonnet on Low — if messages are the same length</div>
+        </div>
+      </div>
+
+      <div style="background:#1a0d28;border:1px solid #4c1d95;border-radius:8px;padding:10px">
+        <div style="font-size:0.7rem;font-weight:700;color:#c084fc;margin-bottom:6px">💰 Usage Limit (Budget)</div>
+        <div style="font-size:0.68rem;color:#94a3b8;line-height:1.6">
+          <div style="margin-bottom:3px"><span style="color:#4ade80">✓</span> Depleted by: ALL tokens — input, output, thinking, tool calls, everything</div>
+          <div style="margin-bottom:3px"><span style="color:#4ade80">✓</span> Affected by: model choice, effort level, thinking ON/OFF</div>
+          <div style="margin-bottom:3px"><span style="color:#4ade80">✓</span> Fable 5 = 2× usage deduction · Opus = ~1.67× Sonnet</div>
+          <div><span style="color:#4ade80">✓</span> Resets on a rolling window (5-hour session + weekly cap on Pro/Max)</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#0d1f0d;border:1px solid #14532d;border-radius:8px;padding:10px;margin-top:10px">
+      <div style="font-size:0.68rem;color:#4ade80;font-weight:700;margin-bottom:4px">💡 The core insight</div>
+      <div style="font-size:0.7rem;color:#94a3b8;line-height:1.6">Switching from Opus 4.8 High to Sonnet Low <b>will not reduce compression</b> — it will reduce usage budget burn. If you want to compress less, you need a <b>larger context window</b> (different surface/plan) or <b>shorter messages</b>. If you want to stretch your usage budget, you need a <b>cheaper model and lower effort</b>.</div>
+    </div>
+  </div>
+
+  <!-- Context window sizes -->
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <h3 style="font-size:0.8rem;font-weight:700;color:#fff;margin-bottom:10px">📐 Context Window Sizes — What Determines Compression Threshold</h3>
+    <p style="font-size:0.68rem;color:#64748b;margin-bottom:10px">The only way to get more conversation before compression is a larger context window. Shown below — model choice and effort level do NOT change these numbers.</p>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:0.7rem">
+        <thead>
+          <tr style="background:#1e293b">
+            <th style="padding:8px 10px;text-align:left;color:#94a3b8;font-weight:600">Surface</th>
+            <th style="padding:8px 10px;text-align:left;color:#94a3b8;font-weight:600">Model</th>
+            <th style="padding:8px 10px;text-align:center;color:#60a5fa;font-weight:600">Pro</th>
+            <th style="padding:8px 10px;text-align:center;color:#c084fc;font-weight:600">Max</th>
+            <th style="padding:8px 10px;text-align:left;color:#94a3b8;font-weight:600">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #1e293b">
+            <td style="padding:7px 10px;color:#cbd5e1">claude.ai chat</td>
+            <td style="padding:7px 10px;color:#94a3b8">Sonnet 4.6</td>
+            <td style="padding:7px 10px;text-align:center;color:#4ade80;font-weight:700">500K</td>
+            <td style="padding:7px 10px;text-align:center;color:#4ade80;font-weight:700">500K</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Same on both plans</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#0d1117">
+            <td style="padding:7px 10px;color:#cbd5e1">claude.ai chat</td>
+            <td style="padding:7px 10px;color:#94a3b8">Opus 4.6 / 4.7 / 4.8</td>
+            <td style="padding:7px 10px;text-align:center;color:#4ade80;font-weight:700">500K</td>
+            <td style="padding:7px 10px;text-align:center;color:#4ade80;font-weight:700">500K</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Same as Sonnet in chat — model doesn't expand window</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#1c0a00">
+            <td style="padding:7px 10px;color:#d97706">claude.ai chat</td>
+            <td style="padding:7px 10px;color:#92400e">Fable 5 ✦</td>
+            <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">2× chat window — requires usage credits both plans</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#0d1117">
+            <td style="padding:7px 10px;color:#cbd5e1">Claude Code</td>
+            <td style="padding:7px 10px;color:#94a3b8">Sonnet 4.6</td>
+            <td style="padding:7px 10px;text-align:center;color:#fb923c;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;text-align:center;color:#fb923c;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Requires usage credits on both plans for 1M</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b">
+            <td style="padding:7px 10px;color:#cbd5e1">Claude Code</td>
+            <td style="padding:7px 10px;color:#94a3b8">Opus 4.6 / 4.7 / 4.8</td>
+            <td style="padding:7px 10px;text-align:center;color:#fb923c;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;text-align:center;color:#4ade80;font-weight:700">1M ✓</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Max includes 1M free · Pro needs usage credits</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#1c0a00">
+            <td style="padding:7px 10px;color:#d97706">Claude Code</td>
+            <td style="padding:7px 10px;color:#92400e">Fable 5 ✦</td>
+            <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Already at 1M in chat — Code gives no bonus window</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.63rem;color:#374151;margin-top:8px">⚠️ = requires usage credits (pay-as-you-go at API rates on top of subscription) &nbsp;·&nbsp; ✓ = included in plan</p>
+  </div>
+
+  <!-- Which concern is yours -->
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <h3 style="font-size:0.8rem;font-weight:700;color:#fff;margin-bottom:12px">🎯 Which Problem Is Actually Yours?</h3>
+
+    <!-- Problem A -->
+    <div style="background:#0c1a2e;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:0.75rem;font-weight:700;color:#60a5fa;margin-bottom:8px">😤 "I keep getting locked out / hitting my usage limit"</div>
+      <div style="font-size:0.68rem;color:#94a3b8;line-height:1.6;margin-bottom:8px">Your plan's session or weekly budget is depleting before your context window fills. You're burning tokens too fast — on expensive models, high effort, or thinking ON when not needed.</div>
+      <div style="font-size:0.68rem;line-height:1.7">
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ Fix:</span> <span style="color:#cbd5e1">Sonnet 4.6 · Low effort · Thinking OFF — minimum possible token burn</span></div>
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ Avoid:</span> <span style="color:#cbd5e1">Opus 4.7/4.8 (tokenizer inflation) · Fable 5 (2× usage) · High/Max effort · Thinking ON for casual work</span></div>
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ Reference:</span> <span style="color:#cbd5e1">See 💰 Token Cost tab for exact usage burn comparisons</span></div>
+        <div><span style="color:#facc15;font-weight:700">⚠ Plans affected:</span> <span style="color:#94a3b8">Free (very tight limits) · Pro (moderate limits) · Max users who do intensive Fable 5 / Opus work</span></div>
+      </div>
+    </div>
+
+    <!-- Problem B -->
+    <div style="background:#0d1f0d;border:1px solid #14532d;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="font-size:0.75rem;font-weight:700;color:#4ade80;margin-bottom:8px">😤 "I keep compressing / context window keeps filling up"</div>
+      <div style="font-size:0.68rem;color:#94a3b8;line-height:1.6;margin-bottom:8px">Your context window is filling with visible conversation text. This is NOT fixed by switching models or lowering effort — those only affect usage budget. Compression speed is determined by message length and window size only.</div>
+      <div style="font-size:0.68rem;line-height:1.7">
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ What actually helps:</span> <span style="color:#cbd5e1">Larger context window (Claude Code on Max with Opus = 1M vs chat's 500K) · Shorter messages · New chat per topic · Projects with RAG for documents</span></div>
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ What doesn't help:</span> <span style="color:#cbd5e1">Switching from Opus to Sonnet · Lowering effort · Turning thinking OFF · These reduce usage burn, not compression speed</span></div>
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ If usage is fine:</span> <span style="color:#cbd5e1">Use whatever model the task needs — Opus 4.8 High compresses at the same speed as Sonnet Low on the same size window</span></div>
+        <div><span style="color:#facc15;font-weight:700">⚠ Plans affected:</span> <span style="color:#94a3b8">Everyone — but Max users who never hit usage limits can freely use high models without worsening compression</span></div>
+      </div>
+    </div>
+
+    <!-- Problem C - Both -->
+    <div style="background:#1a0a1a;border:1px solid #581c87;border-radius:8px;padding:12px">
+      <div style="font-size:0.75rem;font-weight:700;color:#c084fc;margin-bottom:8px">😤 "Both — I compress often AND hit my usage limit"</div>
+      <div style="font-size:0.68rem;color:#94a3b8;line-height:1.6;margin-bottom:8px">Two separate problems requiring two separate solutions.</div>
+      <div style="font-size:0.68rem;line-height:1.7">
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ For usage:</span> <span style="color:#cbd5e1">Sonnet 4.6 · Low · Thinking OFF for casual/planning work</span></div>
+        <div style="margin-bottom:3px"><span style="color:#4ade80;font-weight:700">✓ For compression:</span> <span style="color:#cbd5e1">Claude Code on Max (1M window) · Start new chats per topic · Keep messages concise</span></div>
+        <div><span style="color:#4ade80;font-weight:700">✓ Best overall:</span> <span style="color:#cbd5e1">Escalation ladder — Sonnet Low for planning, escalate only when stuck, Claude Code on Max for heavy coding</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What actually fills the context window -->
+  <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:14px 16px">
+    <h3 style="font-size:0.8rem;font-weight:700;color:#fff;margin-bottom:10px">📋 What Actually Fills Your Context Window (and What Doesn't)</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:#0d1f0d;border-radius:8px;padding:10px">
+        <div style="font-size:0.7rem;font-weight:700;color:#4ade80;margin-bottom:6px">Counts toward context window</div>
+        <div style="font-size:0.68rem;color:#94a3b8;line-height:1.7">
+          <div>✓ Your messages (every word)</div>
+          <div>✓ My visible responses (every word)</div>
+          <div>✓ System prompt and memory context</div>
+          <div>✓ Tool definitions (web search, connectors)</div>
+          <div>✓ Uploaded files and images</div>
+          <div>✓ Current turn's thinking (during generation)</div>
+          <div>✓ Tool call results</div>
+        </div>
+      </div>
+      <div style="background:#1a0505;border-radius:8px;padding:10px">
+        <div style="font-size:0.7rem;font-weight:700;color:#f87171;margin-bottom:6px">Does NOT accumulate in context window</div>
+        <div style="font-size:0.68rem;color:#94a3b8;line-height:1.7">
+          <div>✗ Previous turns' thinking blocks (stripped)</div>
+          <div>✗ Model choice (Sonnet vs Opus)</div>
+          <div>✗ Effort level (Low vs Max)</div>
+          <div>✗ Usage credit weighting</div>
+          <div>✗ Anthropic's billing multipliers</div>
+          <div>✗ API pricing tier</div>
+          <div>✗ Fable 5's "2× usage" cost</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:0.65rem;color:#374151;margin-top:10px;padding-top:8px;border-top:1px solid #1e293b">
+      Practical tip: the biggest single lever for reducing compression is keeping your own messages concise. Long pastes, full file dumps, and verbose prompts fill the window faster than anything else. Use Projects with RAG for large documents instead of pasting them directly.
+    </div>
+  </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════ DECISION SECTION -->
@@ -289,9 +475,19 @@
     <div class="decision-row">
       <span class="decision-tag tag-red">FRONTIER</span>
       <div>
-        <div class="decision-text">Genuinely unsolvable by Opus 4.6, needs absolute best</div>
+        <div class="decision-text">Genuinely unsolvable by Opus 4.8, needs absolute best</div>
         <div class="decision-rec">→ Opus 4.8 · xHigh or Max · Thinking ON</div>
         <div class="decision-rec">Expect ~2× token cost vs Sonnet + tokenizer penalty. Reserve for real dead-ends.</div>
+      </div>
+    </div>
+
+    <div class="decision-row">
+      <span class="decision-tag" style="background:#78350f;color:#fbbf24;flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:0.62rem;font-weight:700;white-space:nowrap;margin-top:1px">✦ FABLE 5</span>
+      <div>
+        <div class="decision-text">Task keeps failing even with Opus 4.8 at Max — large migration, 50M+ line codebase, multi-day autonomous agent work</div>
+        <div class="decision-rec">→ Fable 5 · High or xHigh · Thinking always ON (no choice)</div>
+        <div class="decision-rec">95% SWE-bench Verified · 80.3% SWE-bench Pro · 2× Opus 4.8 per token · BUT cheaper per successfully solved task at frontier-hard difficulty ($6.83 vs $7.46 per solve). The math flips when Opus keeps failing — retries cost more than paying for Fable once. Requires usage credits. 1M context in both chat and Claude Code (no bonus in Code — already at max).</div>
+        <div class="decision-rec" style="color:#d97706;margin-top:3px">⚠ NOT for emotional/creative work — thinking permanently ON makes writing feel more calculated. Use Opus 4.6 with thinking OFF for book and memoir work instead.</div>
       </div>
     </div>
   </div>
@@ -321,7 +517,8 @@ const MODELS = [
   { id:"s",   name:"Sonnet 4.6", note:"Base model · No xHigh · Original tokenizer", card:"card-s",   mult:1.0,  efforts:["low","medium","high","max"] },
   { id:"o46", name:"Opus 4.6",   note:"67% more per token · No xHigh · Original tokenizer", card:"card-o46", mult:1.67, efforts:["low","medium","high","max"] },
   { id:"o47", name:"Opus 4.7",   note:"67% more + ~27% tokenizer inflation · Has xHigh", card:"card-o47", mult:2.12, efforts:["low","medium","high","xhigh","max"] },
-  { id:"o48", name:"Opus 4.8",   note:"Same tokenizer as 4.7 · More efficient on complex tasks", card:"card-o48", mult:2.12, efforts:["low","medium","high","xhigh","max"] }
+  { id:"o48", name:"Opus 4.8",   note:"Same tokenizer as 4.7 · More efficient on complex tasks", card:"card-o48", mult:2.12, efforts:["low","medium","high","xhigh","max"] },
+  { id:"f5",  name:"Fable 5 ✦", note:"Mythos-class · 3.33× Sonnet price + tokenizer · Thinking ALWAYS ON · Cannot be disabled", card:"card-f5", mult:4.23, efforts:["low","medium","high","xhigh","max"], thinkingForced:true }
 ];
 const ALL_E = ["low","medium","high","xhigh","max"];
 const E_LABELS = { low:"Low", medium:"Medium", high:"High", xhigh:"xHigh", max:"Max" };
@@ -335,7 +532,10 @@ function getT(mMult, effort) {
   return em === null ? null : Math.round(BASE * mMult * em);
 }
 function allVals() {
-  return MODELS.flatMap(m => m.efforts.map(e => getT(m.mult, e))).filter(Boolean);
+  return MODELS.flatMap(m => m.efforts.map(e => {
+    if (m.thinkingForced && !thinkOn) return null;
+    return getT(m.mult, e);
+  })).filter(Boolean);
 }
 function barCol(v, max) {
   const p = v/max;
@@ -352,14 +552,17 @@ function renderTokens() {
       <div class="model-body">
         ${ALL_E.map(e => {
           const sup = m.efforts.includes(e);
-          const t   = sup ? getT(m.mult, e) : null;
+          const forcedOff = m.thinkingForced && !thinkOn;
+          const t   = (sup && !forcedOff) ? getT(m.mult, e) : null;
           const lc  = sup ? "effort-label" : "effort-label na";
           const pct = t ? Math.min(100,(t/max)*100) : 0;
           return `<div class="effort-row">
             <span class="${lc}">${E_LABELS[e]}</span>
             <div class="bar-track">${sup && t
               ? `<div class="bar-fill ${barCol(t,max)}" style="width:${pct}%"><span>~${fmt(t)}</span></div>`
-              : `<div class="na-text">Not available on this model</div>`}
+              : sup && forcedOff
+                ? `<div class="na-text" style="color:#78350f;font-style:italic">Thinking always ON — toggle ON to see estimate</div>`
+                : `<div class="na-text">Not available on this model</div>`}
             </div>
             <span class="mult">${t ? "×"+(t/BASE).toFixed(1) : ""}</span>
           </div>`;
@@ -376,7 +579,7 @@ function setThinking(on) {
 }
 function setModel(id) {
   activeModel = id;
-  ["all","s","o46","o47","o48"].forEach(m => {
+  ["all","s","o46","o47","o48","f5"].forEach(m => {
     const b = document.getElementById("btn-"+m);
     if (m === "all") b.className = id==="all" ? "active-all" : "";
     else { b.className = "m-"+m + (id===m ? " active-model" : ""); }
@@ -393,9 +596,11 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:79.6, cls:"score-s"   },
       { model:"Opus 4.6",   score:80.8, cls:"score-o46" },
       { model:"Opus 4.7",   score:87.6, cls:"score-o47" },
-      { model:"Opus 4.8",   score:88.6, cls:"score-o48" }
+      { model:"Opus 4.8",   score:88.6, cls:"score-o48" },
+      { model:"Fable 5 ✦", score:95.0, cls:"score-f5",  note:"Mythos-class" }
     ],
-    note: "Sonnet 4.6 vs Opus 4.6 gap = 1.2 points. Practically identical for everyday coding. Escalate to Opus 4.7/4.8 only for genuinely hard problems.",
+    note: "Sonnet 4.6 vs Opus 4.6 gap = 1.2 points — practically identical for everyday coding. Fable 5 leads at 95%, a 6.4 point jump over Opus 4.8. For routine coding, Opus 4.8 is sufficient; Fable 5's premium is only justified when tasks are genuinely frontier-hard.",
+    fableNote: "★ Fable 5 is cheaper per successfully solved task on frontier-hard work despite higher per-token cost — see Hard Coding tab.",
     max: 100
   },
   "hard-coding": {
@@ -405,9 +610,11 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:53.0, cls:"score-s",   note:"~" },
       { model:"Opus 4.6",   score:55.4, cls:"score-o46" },
       { model:"Opus 4.7",   score:64.3, cls:"score-o47" },
-      { model:"Opus 4.8",   score:69.2, cls:"score-o48" }
+      { model:"Opus 4.8",   score:69.2, cls:"score-o48" },
+      { model:"Fable 5 ✦", score:80.3, cls:"score-f5",  note:"Mythos-class" }
     ],
-    note: "Gap widens significantly here. Sonnet (~53%) vs Opus 4.8 (69.2%) = 16 point gap. Worth the token cost for genuinely complex multi-file problems.",
+    note: "Gap widens significantly here. Fable 5 (80.3%) leads by 11 points over Opus 4.8 (69.2%). On FrontierCode Diamond — the hardest production-codebase benchmark — Fable 5 completes more than 2× the tasks Opus 4.8 can (29.3% vs 13.4%).",
+    fableNote: "★ Cost per successfully solved task at FrontierCode difficulty: Fable 5 = $6.83 · Opus 4.8 = $7.46 · GPT-5.5 = $19.30. Despite costing 2× more per token, Fable 5 is actually cheaper per solve on frontier-hard tasks because Opus 4.8 fails so often it burns more total tokens on retries. The crossover: on routine work, Opus 4.8 wins; on genuinely frontier-hard tasks, Fable 5 is more economical.",
     max: 100
   },
   science: {
@@ -417,9 +624,10 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:74.1, cls:"score-s"   },
       { model:"Opus 4.6",   score:91.3, cls:"score-o46" },
       { model:"Opus 4.7",   score:94.2, cls:"score-o47" },
-      { model:"Opus 4.8",   score:93.6, cls:"score-o48" }
+      { model:"Opus 4.8",   score:93.6, cls:"score-o48" },
+      { model:"Fable 5 ✦", score:92.6, cls:"score-f5",  note:"⚠ bio/chem → Opus 4.8 fallback" }
     ],
-    note: "Largest gap: Sonnet (74.1%) vs Opus 4.6 (91.3%) = 17 points. For deep research, architecture analysis, or expert reasoning — always use Opus.",
+    note: "Fable 5 scores ~92-95% on GPQA but falls back to Opus 4.8 for biology and chemistry queries (safeguard). Opus 4.7 (94.2%) remains the strongest for unrestricted science reasoning. For deep research not involving bio/chem, Fable 5 is excellent.",
     max: 100
   },
   computer: {
@@ -429,9 +637,10 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:72.5, cls:"score-s"   },
       { model:"Opus 4.6",   score:72.7, cls:"score-o46" },
       { model:"Opus 4.7",   score:78.0, cls:"score-o47" },
-      { model:"Opus 4.8",   score:83.4, cls:"score-o48" }
+      { model:"Opus 4.8",   score:83.4, cls:"score-o48" },
+      { model:"Fable 5 ✦", score:85.0, cls:"score-f5",  note:"Mythos-class" }
     ],
-    note: "Sonnet 4.6 and Opus 4.6 are virtually identical (0.2% gap). Opus 4.7/4.8 improve meaningfully. For most computer use tasks, Sonnet wins on cost.",
+    note: "Fable 5 leads at 85% but only 1.6 points over Opus 4.8 (83.4%). For most computer use tasks, Opus 4.8 delivers nearly identical results at half the token cost.",
     max: 100
   },
   terminal: {
@@ -441,9 +650,10 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:59.0, cls:"score-s",   note:"~, TB 2.0" },
       { model:"Opus 4.6",   score:65.4, cls:"score-o46", note:"TB 2.0"    },
       { model:"Opus 4.7",   score:69.4, cls:"score-o47", note:"TB 2.0"    },
-      { model:"Opus 4.8",   score:74.6, cls:"score-o48", note:"TB 2.1"    }
+      { model:"Opus 4.8",   score:74.6, cls:"score-o48", note:"TB 2.1"    },
+      { model:"Fable 5 ✦", score:88.0, cls:"score-f5",  note:"TB 2.1 · Mythos-class" }
     ],
-    note: "⚠ Terminal-Bench changed from v2.0 to v2.1 between Opus 4.7 and 4.8 — not directly comparable. GPT-5.5 beats Opus 4.8 on TB 2.1 (78.2% vs 74.6%).",
+    note: "⚠ Terminal-Bench changed from v2.0 to v2.1 — v2.0 and v2.1 scores are not directly comparable. Fable 5 (88.0%) is a significant jump over Opus 4.8 (74.6%) on TB 2.1, and beats GPT-5.5 (78.2%). This is one of Fable 5's strongest categories.",
     max: 100
   },
   creative: {
@@ -453,9 +663,10 @@ const BENCH_DATA = {
       { model:"Sonnet 4.6", score:76, cls:"score-s",   note:"ELO ~1438" },
       { model:"Opus 4.6",   score:79, cls:"score-o46", note:"ELO ~1503 · ranked #1 globally" },
       { model:"Opus 4.7",   score:81, cls:"score-o47", note:"Est. higher — newer model" },
-      { model:"Opus 4.8",   score:83, cls:"score-o48", note:"Est. higher — newest model" }
+      { model:"Opus 4.8",   score:83, cls:"score-o48", note:"Est. higher — newest model" },
+      { model:"Fable 5 ✦", score:85, cls:"score-f5",  note:"Est. — limited public data (2-day window)" }
     ],
-    note: "⚠ No formal % benchmark for creative/emotional writing. Bars show relative ELO preference (normalized). Opus 4.6 leads Sonnet 4.6 by ~65 ELO points — a meaningful but not massive gap. For companionship chats: Sonnet is excellent. For book writing, memoir, or deep emotional interviews where long-form coherence matters: Opus 4.6 earns its place (also has 128K output vs Sonnet's 64K — lets it write longer chapters in one pass). 💡 Thinking recommendation is DIFFERENT here: Thinking OFF produces more natural, warmer writing. Thinking ON only for structural planning (outlining chapters, organizing timelines) — then back OFF for actual writing.",
+    note: "⚠ No formal % benchmark for creative/emotional writing. Bars show relative ELO preference (normalized). Fable 5 ELO is estimated — it was only publicly available for 2 days before suspension. For companionship chats: Sonnet is excellent. For book writing, memoir, or deep emotional interviews: Opus 4.6 earns its place (128K output vs Sonnet's 64K). 💡 Thinking recommendation is DIFFERENT here: Thinking OFF produces more natural, warmer writing. Thinking ON only for structural planning. ⚠ Fable 5 has thinking PERMANENTLY ON — which may make emotional/creative responses feel more calculated. Opus 4.6 with thinking OFF is likely better for creative work.",
     max: 100
   }
 };
@@ -484,6 +695,7 @@ function renderBench() {
           </div>`;
         }).join("")}
         <p class="bench-note">${d.note}</p>
+        ${d.fableNote ? `<p style="font-size:0.62rem;color:#d97706;margin-top:6px;padding-top:6px;border-top:1px solid #1f2937">${d.fableNote}</p>` : ""}
       </div>
     </div>`;
 }
@@ -498,11 +710,11 @@ function setBench(id) {
 
 // ─── Tab switching ─────────────────────────────────────────────────────────────
 function showTab(id) {
-  ["tokens","bench","decide"].forEach(t => {
+  ["tokens","bench","limits","decide"].forEach(t => {
     document.getElementById("sec-"+t).classList.toggle("visible", t===id);
   });
   document.querySelectorAll(".tab-btn").forEach((b,i) => {
-    b.classList.toggle("active", ["tokens","bench","decide"][i]===id);
+    b.classList.toggle("active", ["tokens","bench","limits","decide"][i]===id);
   });
 }
 
@@ -536,6 +748,12 @@ renderBench();
             <td style="padding:8px 10px;text-align:center;color:#4ade80;font-weight:600">500K</td>
             <td style="padding:8px 10px;text-align:center;color:#4ade80;font-weight:600">500K</td>
           </tr>
+          <tr style="border-top:1px solid #1e293b;background:#1c0a00">
+            <td style="padding:8px 10px;color:#d97706">claude.ai chat ✦</td>
+            <td style="padding:8px 10px;color:#92400e">Fable 5 — already at maximum in chat</td>
+            <td style="padding:8px 10px;text-align:center;color:#d97706;font-weight:600">1M ⚠️</td>
+            <td style="padding:8px 10px;text-align:center;color:#d97706;font-weight:600">1M ⚠️</td>
+          </tr>
           <tr style="border-top:1px solid #1e293b;background:#111827">
             <td style="padding:8px 10px;color:#cbd5e1">Claude Code (web or terminal)</td>
             <td style="padding:8px 10px;color:#94a3b8">Opus 4.6 / 4.7 / 4.8</td>
@@ -547,6 +765,12 @@ renderBench();
             <td style="padding:8px 10px;color:#94a3b8">Sonnet 4.6</td>
             <td style="padding:8px 10px;text-align:center;color:#fb923c;font-weight:600">1M ⚠️</td>
             <td style="padding:8px 10px;text-align:center;color:#fb923c;font-weight:600">1M ⚠️</td>
+          </tr>
+          <tr style="border-top:1px solid #1e293b;background:#1c0a00">
+            <td style="padding:8px 10px;color:#d97706">Claude Code ✦</td>
+            <td style="padding:8px 10px;color:#92400e">Fable 5 — same as chat, no bonus in Code</td>
+            <td style="padding:8px 10px;text-align:center;color:#d97706;font-weight:600">1M ⚠️</td>
+            <td style="padding:8px 10px;text-align:center;color:#d97706;font-weight:600">1M ⚠️</td>
           </tr>
         </tbody>
       </table>
@@ -578,6 +802,7 @@ renderBench();
         <div style="margin-bottom:4px"><span style="color:#facc15;font-weight:700">⚡ Claude Code on Max (Opus 4.6):</span> Best combination — 1M context, lower token burn than 4.7/4.8, deepest reasoning for complex multi-file work</div>
         <div style="margin-bottom:4px"><span style="color:#fb923c;font-weight:700">⚠️ Sonnet 4.6 in Claude Code:</span> Still needs usage credits for 1M even on Max — falls back to 500K without them</div>
         <div style="margin-bottom:4px"><span style="color:#f87171;font-weight:700">⛔ Avoid:</span> Opus 4.7/4.8 in Claude Code unless absolutely necessary — 1M included but tokenizer inflation eats it 20-35% faster · Usage credits still not worth it for Sonnet 1M</div>
+        <div style="margin-bottom:4px"><span style="color:#d97706;font-weight:700">✦ Fable 5 on Max:</span> Requires usage credits on both Pro and Max — no plan includes it free (was temporarily free June 9-22, 2026) · 1M context in chat AND Code (no bonus in Code — already at max) · Thinking always ON · Best reserved for frontier-hard coding tasks where Opus 4.8 genuinely fails · Cheaper per solved task than Opus 4.8 at extreme difficulty</div>
       </div>
     </div>
 
