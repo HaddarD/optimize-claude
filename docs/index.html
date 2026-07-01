@@ -345,6 +345,15 @@
     <p style="font-size:0.7rem;color:#cbd5e1;line-height:1.6">Switching models mid-conversation is possible, but watch the context window size when you do. Going from a large-window model (Sonnet 5 or Fable 5, both 1M) to a smaller-window model (Opus 4.6/4.7/4.8 at 500K in chat) mid-chat can trigger an immediate compression if you've already used more tokens than the smaller window holds. When escalating from a long Sonnet 5 session to Opus, starting a brand new chat is usually safer and cleaner than switching in place.</p>
   </div>
 
+  <!-- Fable 5 status update -->
+  <div style="background:#1c0a00;border:1px solid #78350f;border-radius:12px;padding:14px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:1rem">✦</span>
+      <span style="font-size:0.8rem;font-weight:700;color:#d97706">Fable 5 Status Update — Redeployed July 1, 2026</span>
+    </div>
+    <p style="font-size:0.7rem;color:#cbd5e1;line-height:1.6">Fable 5 was suspended June 12–30 due to a US government export control directive following a reported safety classifier bypass. It has now been redeployed with an improved classifier (blocks the specific reported technique in over 99% of cases) and is available again on Claude.ai, Claude Code, Claude Platform, and Claude Cowork. <b>For Pro, Max, and Team plans: included at no extra cost for up to 50% of your weekly usage limit through July 7, 2026.</b> After July 7, it reverts to usage-credits-only, same as before the redeployment. If a request is blocked by the safety classifier, it's automatically redirected to Opus 4.8 with a notification.</p>
+  </div>
+
   <div class="decision-card">
     <h3>What kind of problem are you stuck on?</h3>
 
@@ -436,7 +445,7 @@
       <div>
         <div class="decision-text">Task keeps failing even with Opus 4.8 at Max — large migration, 50M+ line codebase, multi-day autonomous agent work</div>
         <div class="decision-rec">→ Fable 5 · High or xHigh · Thinking always ON (no choice)</div>
-        <div class="decision-rec">95% SWE-bench Verified · 80.3% SWE-bench Pro · 2× Opus 4.8 per token · BUT cheaper per successfully solved task at frontier-hard difficulty ($6.83 vs $7.46 per solve). The math flips when Opus keeps failing — retries cost more than paying for Fable once. Requires usage credits. 1M context in both chat and Claude Code (no bonus in Code — already at max).</div>
+        <div class="decision-rec">95% SWE-bench Verified · 80.3% SWE-bench Pro · 2× Opus 4.8 per token · BUT cheaper per successfully solved task at frontier-hard difficulty ($6.83 vs $7.46 per solve). The math flips when Opus keeps failing — retries cost more than paying for Fable once. Redeployed Jul 1 (was suspended for export controls) — included up to 50% of weekly usage limit through Jul 7, then usage credits only. 1M context in both chat and Claude Code (no bonus in Code — already at max).</div>
         <div class="decision-rec" style="color:#d97706;margin-top:3px">⚠ NOT for emotional/creative work — thinking permanently ON makes writing feel more calculated. Use Opus 4.6 with thinking OFF for book and memoir work instead.</div>
       </div>
     </div>
@@ -512,7 +521,7 @@
             <td style="padding:7px 10px;text-align:center;color:#374151;font-weight:700">—</td>
             <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
             <td style="padding:7px 10px;text-align:center;color:#d97706;font-weight:700">1M ⚠️</td>
-            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Requires usage credits on all plans · currently suspended</td>
+            <td style="padding:7px 10px;color:#64748b;font-size:0.65rem">Available again as of Jul 1 · included up to 50% of weekly limit through Jul 7, then usage credits only</td>
           </tr>
           <tr style="border-top:1px solid #1e293b;background:#0d1117">
             <td style="padding:7px 10px;color:#cbd5e1">Claude Code</td>
@@ -554,7 +563,7 @@ const MODELS = [
   { id:"o46", name:"Opus 4.6",   note:"67% more per token · No xHigh · Original tokenizer · 500K chat / 1M Code (Max)", card:"card-o46", mult:1.67, efforts:["low","medium","high","max"] },
   { id:"o47", name:"Opus 4.7",   note:"67% more + ~27% tokenizer inflation · Has xHigh · 500K chat / 1M Code (Max)", card:"card-o47", mult:2.12, efforts:["low","medium","high","xhigh","max"] },
   { id:"o48", name:"Opus 4.8",   note:"Same tokenizer as 4.7 · More efficient on complex tasks · 500K chat / 1M Code (Max)", card:"card-o48", mult:2.12, efforts:["low","medium","high","xhigh","max"] },
-  { id:"f5",  name:"Fable 5 ✦", note:"Mythos-class · 3.33× Sonnet price + tokenizer · Thinking ALWAYS ON · Cannot be disabled · 1M chat+Code", card:"card-f5", mult:4.23, efforts:["low","medium","high","xhigh","max"], thinkingForced:true }
+  { id:"f5",  name:"Fable 5 ✦", note:"Mythos-class · 3.33× Sonnet price + tokenizer · Thinking ALWAYS ON · Cannot be disabled · 1M chat+Code · Available Jul 1+", card:"card-f5", mult:4.23, efforts:["low","medium","high","xhigh","max"], thinkingForced:true }
 ];
 const ALL_E = ["low","medium","high","xhigh","max"];
 const E_LABELS = { low:"Low", medium:"Medium", high:"High", xhigh:"xHigh", max:"Max" };
@@ -864,7 +873,7 @@ renderBench();
         <div style="margin-bottom:4px"><span style="color:#facc15;font-weight:700">⚡ When to escalate to Opus:</span> Hard multi-file architecture, deep science research, GPQA-level reasoning — the gap between Sonnet 5 and Opus has narrowed significantly</div>
         <div style="margin-bottom:4px"><span style="color:#fb923c;font-weight:700">⚠ Sonnet 5 in Claude Code:</span> Likely 1M included natively — confirm in settings; old usage credits requirement was specific to Sonnet 4.6's 500K window</div>
         <div style="margin-bottom:4px"><span style="color:#f87171;font-weight:700">⛔ Avoid:</span> Opus 4.7/4.8 unless specifically needed — tokenizer inflation eats context 20-35% faster with minimal quality gain over Opus 4.6</div>
-        <div style="margin-bottom:4px"><span style="color:#d97706;font-weight:700">✦ Fable 5 on Max:</span> Requires usage credits · 1M context in chat AND Code · Thinking always ON · Best for frontier-hard tasks where Opus 4.8 genuinely keeps failing · Cheaper per solved task at extreme difficulty</div>
+        <div style="margin-bottom:4px"><span style="color:#d97706;font-weight:700">✦ Fable 5 on Max:</span> Redeployed Jul 1 after export control suspension · Included up to 50% of weekly usage limit through Jul 7, then usage credits only · 1M context in chat AND Code · Thinking always ON · Best for frontier-hard tasks where Opus 4.8 genuinely keeps failing · Cheaper per solved task at extreme difficulty</div>
       </div>
     </div>
 

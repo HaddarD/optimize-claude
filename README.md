@@ -53,7 +53,7 @@ Task-type → model + effort + thinking mapping covering companion conversation,
 - Switching from Opus to Sonnet does **not** reduce compression speed in isolation — it's the same tokens for both context and usage. To compress less, you need a larger context window or shorter messages. Sonnet 5's 1M chat window is the biggest single lever.
 - Thinking tokens **do accumulate** in the context window on Sonnet 4.6+, Opus 4.5+, and Fable 5 — turning thinking OFF genuinely helps both usage and compression.
 - Opus 4.7/4.8 use 20–35% more tokens than Opus 4.6 for identical text due to a new tokenizer — same price, higher effective cost.
-- Fable 5 has thinking permanently ON with no toggle, costs ~4.23× Sonnet base per token minimum, and requires usage credits on all plans.
+- Fable 5 has thinking permanently ON with no toggle, costs ~4.23× Sonnet base per token minimum. **Redeployed July 1, 2026** after a June 12–30 suspension due to a US export control directive — now included at no extra cost for up to 50% of weekly usage limit through July 7, 2026, then usage-credits-only after that.
 - On Max plan, Claude Code with Opus 4.6 gives you a 1M context window — but Sonnet 5 now matches this in regular chat.
 
 ---
